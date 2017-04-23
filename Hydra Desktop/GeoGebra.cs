@@ -12,7 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Hydra
 {
-    class GeoGebra
+    public class GeoGebra
     {
 
         BrowserForm browserForm;
@@ -94,13 +94,10 @@ namespace Hydra
             }
 
             //Now you can safely execute code!
-            async public void Loaded()
+            public void Loaded()
             {
                 Console.WriteLine("GeoGebra Fully Loaded!");
-
-                var pt = await self.CreatePoint(1, 1, 0);
-
-                Console.WriteLine(pt.Name);
+                self.Load(self, new EventArgs());
             }
         }
 
@@ -108,6 +105,12 @@ namespace Hydra
 
 
 
+        /**
+         * GeoGebra.Load event
+         **/
+        public event EventHandler Load;
+        
+        
         /**
          * General GeoGebra.Object class
          **/
@@ -188,23 +191,32 @@ namespace Hydra
             Task<double> X { get; }
             Task<double> Y { get; }
             Task<double> Z { get; }
+
+            Task<Tuple<double, double, double>> Coords { get; }
         }
 
         class Point : Object, IPoint
         {
             public Point(GeoGebra instance, string name = null) : base(instance, name) { }
+            
+
+            async Task<double> getCoord(string c)
+            {
+                if (_name == null)
+                    throw new ObjectDisposedException("This object no longer exists.");
+
+                var command = string.Format(@"ggbApplet.get{0}coord(""{1}"")", c, _name);
+                var result = self.mainFrame.EvaluateScriptAsync(command);
+                return (double)(await result).Result;
+            }
 
             public Task<double> X
             {
                 get
                 {
-                    if (_name == null)
-                        throw new ObjectDisposedException("This object no longer exists.");
-
-                    var command = "ggbApplet.getXcoord(\"" + _name + "\")";
-                    var result = self.mainFrame.EvaluateScriptAsync(command);
-                    return Task.Run<double>(async () => {
-                        return (double)(await result).Result;
+                    return Task<double>.Run(async () =>
+                    {
+                        return await getCoord("X");
                     });
                 }
             }
@@ -213,7 +225,10 @@ namespace Hydra
             {
                 get
                 {
-                    throw new NotImplementedException();
+                    return Task<double>.Run(async () =>
+                    {
+                        return await getCoord("Y");
+                    });
                 }
             }
 
@@ -221,14 +236,45 @@ namespace Hydra
             {
                 get
                 {
-                    throw new NotImplementedException();
+                    return Task<double>.Run(async () =>
+                    {
+                        return await getCoord("Z");
+                    });
+                }
+            }
+
+            public Task<Tuple<double,double,double>> Coords
+            {
+                get
+                {
+                    return Task<Tuple<double, double, double>>.Run(async () =>
+                    {
+                        if (_name == null)
+                            throw new ObjectDisposedException("This object no longer exists.");
+
+                        var command = string.Format(@"
+                        [
+                            ggbApplet.getXcoord(""{1}""),
+                            ggbApplet.getYcoord(""{1}""),
+                            ggbApplet.getZcoord(""{1}""),
+                        ]
+                        ", _name);
+
+                        var task = self.mainFrame.EvaluateScriptAsync(command);
+                        var result = (object[])(await task).Result;
+                        return Tuple.Create(
+                            (double)result[0],
+                            (double)result[1],
+                            (double)result[2]
+                        );
+                    });
                 }
             }
         }
 
         
 
-        public async Task<IObject> CreatePoint(double x, double y, double z, string name=null)
+        public async Task<IPoint> CreatePoint(double x, double y, double z, string name=null)
         {
             var command = name==null ? "" : name+"=";
             command += string.Format("({0},{1},{2})",x,y,z);
@@ -239,7 +285,7 @@ namespace Hydra
             
             name = (string)(await mainFrame.EvaluateScriptAsync(command)).Result;
 
-            var result = new Object(this);
+            var result = new Point(this);
             result._name = name;
 
             return result;

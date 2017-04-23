@@ -12,14 +12,23 @@ namespace Hydra
 {
     public partial class MainForm : Form
     {
+
+        GeoGebra ggb;
+
         public MainForm()
         {
             InitializeComponent();
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        void MainForm_Load(object sender, EventArgs e)
         {
-            var ggb = new GeoGebra();
+            ggb = new GeoGebra();
+            ggb.Load += Ggb_Load;
+        }
+
+        private async void Ggb_Load(object sender, EventArgs e)
+        {
+            await ggb.CreatePoint(1, 2, 3);
         }
     }
 }
