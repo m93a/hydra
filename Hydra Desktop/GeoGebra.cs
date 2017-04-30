@@ -2,8 +2,15 @@
 using CefSharp.MinimalExample.WinForms;
 using CefSharp.WinForms;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+
+/**
+ * This is the main GeoGebra library-thing.
+ * TODO Explain how it works.
+ **/
+
 
 namespace Hydra
 {
@@ -157,10 +164,12 @@ namespace Hydra
                 if (_name == null)
                     throw new ObjectDisposedException("This object no longer exists.");
 
-                var command = string.Format("ggbApplet.renameObject({0},{1})",_name,name);
+                var command = string.Format(@"ggbApplet.renameObject(""{0}"",""{1}"")",_name,name);
                 var result = self.mainFrame.EvaluateScriptAsync(command);
                 if (!(bool)(await result).Result)
                     throw new Exception("There was an error while renaming "+_name+" to "+name+".");
+
+                _name = name;
             }
 
 
@@ -168,8 +177,13 @@ namespace Hydra
             {
                 if (_name == null) { return; };
 
-                var command = string.Format("ggbApplet.deleteObject({0})",_name);
+                var command = string.Format(@"ggbApplet.deleteObject(""{0}"")",_name);
                 await self.mainFrame.EvaluateScriptAsync(command);
+
+                if (await Exists)
+                    throw new Exception("Could not delete the object.");
+
+                _name = null;
             }
         }
 
@@ -187,7 +201,7 @@ namespace Hydra
             Task<double> Y { get; }
             Task<double> Z { get; }
 
-            Task<Tuple<double, double, double>> Coords { get; }
+            Task<List<double>> Coords { get; }
         }
 
         class Point : Object, IPoint
@@ -195,6 +209,7 @@ namespace Hydra
             public Point(GeoGebra instance, string name = null) : base(instance, name) { }
             
 
+            //To get the X coord, you call getCoord("x")
             async Task<double> getCoord(string c)
             {
                 if (_name == null)
@@ -202,7 +217,11 @@ namespace Hydra
 
                 var command = string.Format(@"ggbApplet.get{0}coord(""{1}"")", c, _name);
                 var result = self.mainFrame.EvaluateScriptAsync(command);
-                return (double)(await result).Result;
+
+                //Convert from any boxed type to double
+                return (double)Convert.ChangeType(
+                    (await result).Result, typeof(double)
+                );
             }
 
             public Task<double> X
@@ -238,30 +257,29 @@ namespace Hydra
                 }
             }
 
-            public Task<Tuple<double,double,double>> Coords
+            public Task<List<double>> Coords
             {
                 get
                 {
-                    return Task<Tuple<double, double, double>>.Run(async () =>
+                    return Task.Run(async () =>
                     {
                         if (_name == null)
                             throw new ObjectDisposedException("This object no longer exists.");
 
                         var command = string.Format(@"
                         [
-                            ggbApplet.getXcoord(""{1}""),
-                            ggbApplet.getYcoord(""{1}""),
-                            ggbApplet.getZcoord(""{1}""),
+                            ggbApplet.getXcoord(""{0}""),
+                            ggbApplet.getYcoord(""{0}""),
+                            ggbApplet.getZcoord(""{0}""),
                         ]
                         ", _name);
 
                         var task = self.mainFrame.EvaluateScriptAsync(command);
-                        var result = (object[])(await task).Result;
-                        return Tuple.Create(
-                            (double)result[0],
-                            (double)result[1],
-                            (double)result[2]
-                        );
+                        var result = (List<object>)(await task).Result;
+
+                        //Convert from any boxed type to double
+                        return result.ConvertAll(item => (double)Convert.ChangeType(item, typeof(double)));
+
                     });
                 }
             }

@@ -76,6 +76,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="nunit.framework, Version=3.6.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.3.6.1\lib\net45\nunit.framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -153,11 +157,41 @@
   <Import Project="..\packages\cef.redist.x86.3.2987.1601\build\cef.redist.x86.targets" Condition="Exists('..\packages\cef.redist.x86.3.2987.1601\build\cef.redist.x86.targets')" />
   <Import Project="..\packages\CefSharp.Common.57.0.0\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.57.0.0\build\CefSharp.Common.targets')" />
   <Import Project="..\packages\CefSharp.WinForms.57.0.0\build\CefSharp.WinForms.targets" Condition="Exists('..\packages\CefSharp.WinForms.57.0.0\build\CefSharp.WinForms.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\Mono.Cecil.dll">
+      <Link>Mono.Cecil.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\nunit-agent.exe">
+      <Link>nunit-agent.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\nunit-agent.exe.config">
+      <Link>nunit-agent.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\nunit.engine.api.dll">
+      <Link>nunit.engine.api.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\nunit.engine.dll">
+      <Link>nunit.engine.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\nunit3-console.exe">
+      <Link>nunit3-console.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\NUnit.ConsoleRunner.3.6.1\tools\nunit3-console.exe.config">
+      <Link>nunit3-console.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

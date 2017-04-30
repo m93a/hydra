@@ -3,10 +3,27 @@ using Hydra;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
 using System.Threading.Tasks;
+using NUnit.Framework;
+
+
+using Assert = NUnit.Framework.Assert;
+using System.IO;
+using System.Collections.Generic;
+//using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+
+
+/**
+ * To execute the tests:
+ * Test Explorer > Run All
+ * Ctrl+R cmd Enter
+ * cd "Hydra Desktop Tests/bin/Debug"
+ * nunit3-console.exe "Hydra Desktop Tests.dll" --domain=None --inprocess
+ **/
+
 
 namespace HydraTests
 {
-    [TestClass]
+    //[TestClass, /*TestFixture*/]
     public class GeoGebraTest
     {
 
@@ -20,9 +37,15 @@ namespace HydraTests
          * GeoGebra to load. This requires a lot of asyncs,
          * awaits and Tasks...
          **/
+        
         [ClassInitialize, STAThread]
-        public static void Initialize(TestContext fortyTwo)
+        public static void Initialize(object a = null) { Initialize(); }
+        
+        [OneTimeSetUp, STAThread]
+        public static void Initialize()
         {
+            //Directory.SetCurrentDirectory(AppDomain.CurrentDomain‌​.BaseDirectory);
+
             //Run Windows Forms asynchronously
             application = Task.Run(()=> {
                 Application.Run(new TestForm());
@@ -59,20 +82,20 @@ namespace HydraTests
          * Tell Windows Forms to shut down and wait untill
          * they finish doing so.
          **/
-        [ClassCleanup]
+        [ClassCleanup, OneTimeTearDown]
         public static void Terminate()
         {
             Application.Exit();
             application.Wait();
         }
 
-        //[TestInitialize]
+        [TestInitialize, TearDown]
         public void CleanGeoGebra()
         {
 
         }
 
-        [TestMethod]
+        [TestMethod, Test]
         public async Task Point()
         {
             //Basic functionality
@@ -86,21 +109,21 @@ namespace HydraTests
 
             Assert.IsNotNull(pt.Name, "Point has a name");
 
-            Assert.Equals(await pt.X, 1);
-            Assert.Equals(await pt.Y, 2);
-            Assert.Equals(await pt.Z, 3);
+            Assert.AreEqual(await pt.X, 1);
+            Assert.AreEqual(await pt.Y, 2);
+            Assert.AreEqual(await pt.Z, 3);
 
-            Assert.Equals(await pt.Coords, Tuple.Create(1d,2d,3d));
+            Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
 
 
             //Renaming
 
             var name = "František";
             await pt.Rename(name);
-            Assert.Equals(pt.Name, name);
+            Assert.AreEqual(pt.Name, name);
 
             Assert.IsTrue(await pt.Exists);
-            Assert.Equals(await pt.Coords, Tuple.Create(1d, 2d, 3d));
+            Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
 
 
             //Deleting
