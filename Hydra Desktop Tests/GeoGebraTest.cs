@@ -15,8 +15,8 @@ using System.Collections.Generic;
 /**
  * To execute the tests:
  * Test Explorer > Run All
- * Ctrl+R cmd Enter
- * cd "Hydra Desktop Tests/bin/Debug"
+ * Win+R cmd Enter
+ * cd "Hydra Desktop Tests/bin/[x86|x64]/Debug"
  * nunit3-console.exe "Hydra Desktop Tests.dll" --domain=None --inprocess
  **/
 
@@ -92,11 +92,19 @@ namespace HydraTests
         [TestInitialize, TearDown]
         public void CleanGeoGebra()
         {
-
+            //TODO
         }
 
+
+
+
+        /*
+         * Tests for IPoint
+         */
+
+
         [TestMethod, Test]
-        public async Task Point()
+        public async Task PointBasic()
         {
             //Basic functionality
 
@@ -114,9 +122,14 @@ namespace HydraTests
             Assert.AreEqual(await pt.Z, 3);
 
             Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
+        }
 
-
+        [TestMethod, Test]
+        public async Task PointRename()
+        {
             //Renaming
+
+            var pt = await instance.CreatePoint(1, 2, 3);
 
             var name = "František";
             await pt.Rename(name);
@@ -124,9 +137,14 @@ namespace HydraTests
 
             Assert.IsTrue(await pt.Exists);
             Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
+        }
 
-
+        [TestMethod, Test]
+        public async Task PointDelete()
+        {
             //Deleting
+
+            var pt = await instance.CreatePoint(1, 2, 3);
 
             await pt.Delete();
 
@@ -135,4 +153,11 @@ namespace HydraTests
 
         }
     }
+
+    /**
+     * TODO 
+     * * *
+     * IPoint.CopyFreeObject
+     * IFreePoint.SetCoords
+     **/
 }

@@ -83,6 +83,8 @@
     </Compile>
     <Compile Include="Controls\ControlExtensions.cs" />
     <Compile Include="GeoGebra.cs" />
+    <Compile Include="GeoGebra.IFreePoint.cs" />
+    <Compile Include="GeoGebra.IObject.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -215,6 +217,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="DefaultRequestHandler.cs" />
+    <Compile Include="GeoGebra.IPoint.cs" />
     <None Include="packages.config" />
     <None Include="Resources\nav_left_green.png" />
   </ItemGroup>

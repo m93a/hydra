@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Hydra
 {
-    public class GeoGebra
+    public partial class GeoGebra
     {
 
         BrowserForm browserForm;
@@ -61,6 +61,8 @@ namespace Hydra
                 if (frame.IsMain)
                 {
                     //Listen for GeoGebra's load event
+                    //Which actually doesn't fire for some reason
+                    //So we need to hack around a little
                     frame.ExecuteJavaScriptAsync(@"
                         (function repeat(){
                             if(window.ggbApplet && ggbApplet.evalCommand) {
@@ -113,181 +115,16 @@ namespace Hydra
         public event EventHandler Load;
         
         
-        /**
-         * General GeoGebra.Object class
-         **/
         
-        public interface IObject
-        {
-            string Name { get; }
-            Task<bool> Exists { get; }
-            Task Rename(string name);
-            Task Delete();
-        }
-
-        class Object : IObject
-        {
-            protected GeoGebra self;
-            public string _name;
-            public string Name
-            {
-                get { return _name; }
-            }
-
-            public Object(GeoGebra instance, string name = null)
-            {
-                self = instance;
-                _name = name;
-            }
-
-
-            public Task<bool> Exists
-            {
-                get
-                {
-                    if(_name == null)
-                        return Task.Run(()=>false);
-
-                    var command = "ggbApplet.exists(\"" + _name + "\")";
-                    var result = self.mainFrame.EvaluateScriptAsync(command);
-                    return Task.Run<bool>(async () => {
-                        var exists = (bool)(await result).Result;
-                        if (!exists) { _name = null; }
-                        return exists;
-                    });
-                }
-            }
-
-
-            public async Task Rename(string name)
-            {
-                if (_name == null)
-                    throw new ObjectDisposedException("This object no longer exists.");
-
-                var command = string.Format(@"ggbApplet.renameObject(""{0}"",""{1}"")",_name,name);
-                var result = self.mainFrame.EvaluateScriptAsync(command);
-                if (!(bool)(await result).Result)
-                    throw new Exception("There was an error while renaming "+_name+" to "+name+".");
-
-                _name = name;
-            }
-
-
-            public async Task Delete()
-            {
-                if (_name == null) { return; };
-
-                var command = string.Format(@"ggbApplet.deleteObject(""{0}"")",_name);
-                await self.mainFrame.EvaluateScriptAsync(command);
-
-                if (await Exists)
-                    throw new Exception("Could not delete the object.");
-
-                _name = null;
-            }
-        }
-
-
-
+        
+        
 
 
         /**
-         * GeoGebra.Point
+         * <summary>Create new free point with the given coordinates.</summary>
          **/
-        
-        public interface IPoint : IObject
-        {
-            Task<double> X { get; }
-            Task<double> Y { get; }
-            Task<double> Z { get; }
 
-            Task<List<double>> Coords { get; }
-        }
-
-        class Point : Object, IPoint
-        {
-            public Point(GeoGebra instance, string name = null) : base(instance, name) { }
-            
-
-            //To get the X coord, you call getCoord("x")
-            async Task<double> getCoord(string c)
-            {
-                if (_name == null)
-                    throw new ObjectDisposedException("This object no longer exists.");
-
-                var command = string.Format(@"ggbApplet.get{0}coord(""{1}"")", c, _name);
-                var result = self.mainFrame.EvaluateScriptAsync(command);
-
-                //Convert from any boxed type to double
-                return (double)Convert.ChangeType(
-                    (await result).Result, typeof(double)
-                );
-            }
-
-            public Task<double> X
-            {
-                get
-                {
-                    return Task<double>.Run(async () =>
-                    {
-                        return await getCoord("X");
-                    });
-                }
-            }
-
-            public Task<double> Y
-            {
-                get
-                {
-                    return Task<double>.Run(async () =>
-                    {
-                        return await getCoord("Y");
-                    });
-                }
-            }
-
-            public Task<double> Z
-            {
-                get
-                {
-                    return Task<double>.Run(async () =>
-                    {
-                        return await getCoord("Z");
-                    });
-                }
-            }
-
-            public Task<List<double>> Coords
-            {
-                get
-                {
-                    return Task.Run(async () =>
-                    {
-                        if (_name == null)
-                            throw new ObjectDisposedException("This object no longer exists.");
-
-                        var command = string.Format(@"
-                        [
-                            ggbApplet.getXcoord(""{0}""),
-                            ggbApplet.getYcoord(""{0}""),
-                            ggbApplet.getZcoord(""{0}""),
-                        ]
-                        ", _name);
-
-                        var task = self.mainFrame.EvaluateScriptAsync(command);
-                        var result = (List<object>)(await task).Result;
-
-                        //Convert from any boxed type to double
-                        return result.ConvertAll(item => (double)Convert.ChangeType(item, typeof(double)));
-
-                    });
-                }
-            }
-        }
-
-        
-
-        public async Task<IPoint> CreatePoint(double x, double y, double z, string name=null)
+        public async Task<IFreePoint> CreatePoint(double x, double y, double z=0, string name=null)
         {
             var command = name==null ? "" : name+"=";
             command += string.Format("({0},{1},{2})",x,y,z);
@@ -298,8 +135,7 @@ namespace Hydra
             
             name = (string)(await mainFrame.EvaluateScriptAsync(command)).Result;
 
-            var result = new Point(this);
-            result._name = name;
+            var result = new FreePoint(this, name);
 
             return result;
         }
