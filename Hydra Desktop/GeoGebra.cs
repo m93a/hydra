@@ -3,7 +3,6 @@ using CefSharp.MinimalExample.WinForms;
 using CefSharp.WinForms;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 /**
@@ -40,14 +39,14 @@ namespace Hydra
             var settings = new CefSettings()
             {
                 //By default CefSharp will use an in-memory cache, you need to specify a Cache Folder to persist data
-                CachePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CefSharp\\Cache")
+                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CefSharp\\Cache")
             };
 
             //Perform dependency check to make sure all relevant resources are in our output directory.
             Cef.Initialize(settings, performDependencyCheck: true, browserProcessHandler: null);
 
             //Initialize the browser
-            var url = Path.Combine(Environment.CurrentDirectory, @"GeoGebra\index.html");
+            var url = System.IO.Path.Combine(Environment.CurrentDirectory, @"GeoGebra\index.html");
             browserForm = new BrowserForm(url);
             browser = browserForm.browser;
 
@@ -123,7 +122,29 @@ namespace Hydra
         /**
          * <summary>Create new free point with the given coordinates.</summary>
          **/
+        
+        public Task<IFreePoint> CreatePoint(List<double> coords, string name = null)
+        {
+            var c = coords;
 
+            switch (c.Count)
+            {
+                case 2:
+                    return CreatePoint(c[0], c[1], 0, name);
+
+                case 3:
+                    return CreatePoint(c[0], c[1], c[2], name);
+
+                default:
+                    throw new ArgumentException("Wrong number of coordinates!");
+            }
+        }
+
+
+        /**
+         * <summary>Create new free point with the given coordinates.</summary>
+         **/
+        
         public async Task<IFreePoint> CreatePoint(double x, double y, double z=0, string name=null)
         {
             var command = name==null ? "" : name+"=";

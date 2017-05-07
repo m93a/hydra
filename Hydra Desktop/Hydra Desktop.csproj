@@ -31,6 +31,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>bin\x64\Debug\</OutputPath>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\x64\Debug\Hydra.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
@@ -43,6 +44,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\x86\Debug\Hydra.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -58,6 +60,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\Debug\Hydra.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\Release\</OutputPath>
@@ -84,7 +87,14 @@
     <Compile Include="Controls\ControlExtensions.cs" />
     <Compile Include="GeoGebra.cs" />
     <Compile Include="GeoGebra.IFreePoint.cs" />
+    <Compile Include="GeoGebra.ILine.cs" />
     <Compile Include="GeoGebra.IObject.cs" />
+    <Compile Include="GeoGebra.IPath.cs" />
+    <Compile Include="GeoGebra.IPointInRegion.cs" />
+    <Compile Include="GeoGebra.IPointOnPath.cs" />
+    <Compile Include="GeoGebra.IRegion.cs" />
+    <Compile Include="GeoGebra.IRestrictedPoint.cs" />
+    <Compile Include="GeoGebra.IVector.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

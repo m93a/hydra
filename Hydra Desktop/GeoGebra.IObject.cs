@@ -35,6 +35,15 @@ namespace Hydra
                 _name = name;
             }
 
+            ~Object()
+            {
+                // Will this hurt, mommy?
+                // var t = Delete();
+                // tl;dr Yes it will.
+                // First we need to make sure not to GC the objects
+                // that are needed by other dependent ones.
+            }
+
 
             public Task<bool> Exists
             {

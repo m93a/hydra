@@ -159,5 +159,14 @@ namespace HydraTests
      * * *
      * IPoint.CopyFreeObject
      * IFreePoint.SetCoords
+     * make sure to check (x,y), (x,y,z) and (list) everywhere
+     * make sure nothing can be called on a deleted object
+     * make sure objects get garbage-collected
+     * 
+     * IRestrictedPoint
+     * IPointOnPath
+     * IPath
+     * ILine
+     * IVector
      **/
 }

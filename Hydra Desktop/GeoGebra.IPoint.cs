@@ -23,19 +23,12 @@ namespace Hydra
             Task<IFreePoint> CopyFreeObject();
         }
 
-        public interface IFreePoint : IPoint
-        {
-            Task SetCoords(List<double> c);
-            Task SetCoords(double x, double y);
-            Task SetCoords(double x, double y, double z);
-        }
-
         class Point : Object, IPoint
         {
             public Point(GeoGebra instance, string name) : base(instance, name) { }
             
 
-            //To get the X coord, you call getCoord("x")
+            //To get the X coord, you call getCoord("X")
             async Task<double> getCoord(string c)
             {
                 if (_name == null)
@@ -54,7 +47,7 @@ namespace Hydra
             {
                 get
                 {
-                    return Task<double>.Run(async () =>
+                    return Task.Run(async () =>
                     {
                         return await getCoord("X");
                     });
@@ -65,7 +58,7 @@ namespace Hydra
             {
                 get
                 {
-                    return Task<double>.Run(async () =>
+                    return Task.Run(async () =>
                     {
                         return await getCoord("Y");
                     });
@@ -76,7 +69,7 @@ namespace Hydra
             {
                 get
                 {
-                    return Task<double>.Run(async () =>
+                    return Task.Run(async () =>
                     {
                         return await getCoord("Z");
                     });
@@ -128,6 +121,35 @@ namespace Hydra
                 var name = (string)(await task).Result;
                 
                 return new FreePoint(self, name);
+            }
+
+
+
+            public Task SetCoords(List<double> c)
+            {
+                switch (c.Count)
+                {
+                    case 2:
+                        return SetCoords(c[0], c[1]);
+
+                    case 3:
+                        return SetCoords(c[0], c[1], c[2]);
+
+                    default:
+                        throw new ArgumentException("Wrong number of coordinates!");
+                }
+            }
+
+            public async Task SetCoords(double x, double y, double z = 0)
+            {
+                if (_name == null)
+                    throw new ObjectDisposedException("This object no longer exists.");
+
+                var command = string.Format(@"
+                    ggbApplet.setCoords(""{0}"",{1},{2},{3}),
+                ", _name, x, y, z);
+
+                await self.mainFrame.EvaluateScriptAsync(command);
             }
         }
     }
