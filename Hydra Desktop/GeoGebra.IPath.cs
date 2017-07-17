@@ -6,7 +6,7 @@ namespace Hydra
 {
     public partial class GeoGebra
     {
-        public interface IPath
+        public interface IPath : IObject
         {
             Task<IPointOnPath> CreatePoint(double? parameter = null);
 
@@ -20,7 +20,7 @@ namespace Hydra
             Task<IVector> Normal(IPointOnPath there);
             Task<IVector> Normal(double parameter);
 
-            Task<IPoint> Intersect(IPath path);
+            Task<List<IPoint>> Intersect(IPath path);
         }
 
         class Path : Object, IPath
@@ -32,13 +32,13 @@ namespace Hydra
             {
                 var command = string.Format(@"
                     Point[{0}{1}]
-                ", _name, (parameter == null) ? "" : (", "+parameter) );
+                ", Name, (parameter == null) ? "" : (", "+parameter) );
 
                 command = string.Format(@"
                     ggbApplet.evalCommandGetLabels(""{0}"");
                 ",command);
 
-                var name = (string)(await self.mainFrame.EvaluateScriptAsync(command)).Result;
+                var name = (string)(await self.MainFrame.EvaluateScriptAsync(command)).Result;
 
                 var result = new PointOnPath(self, name);
 
@@ -73,13 +73,13 @@ namespace Hydra
             {
                 var command = string.Format(@"
                     ClosestPoint[{0},{1}]
-                ", _name, point.Name);
+                ", Name, point.Name);
 
                 command = string.Format(@"
                     ggbApplet.evalCommandGetLabels(""{0}"");
                 ", command);
 
-                var name = (string)(await self.mainFrame.EvaluateScriptAsync(command)).Result;
+                var name = (string)(await self.MainFrame.EvaluateScriptAsync(command)).Result;
 
                 var result = new PointOnPath(self, name);
 
@@ -89,9 +89,33 @@ namespace Hydra
 
 
 
-            public Task<IPoint> Intersect(IPath path)
+            public async Task<List<IPoint>> Intersect(IPath path)
             {
-                throw new NotImplementedException();
+                if (Name == null)
+                    throw new ObjectDisposedException("This object no longer exists.");
+
+                var command = string.Format(@"
+                    Intersect[{0},{1}]
+                ", path.Name, Name);
+
+                command = string.Format(@"
+                    Array(ggbApplet.evalCommandGetLabels(""{0}""));
+                ", command);
+
+                var task = self.MainFrame.EvaluateScriptAsync(command);
+                var result = (List<object>)(await task).Result;
+
+                //Convert from any boxed type to string
+                var names =  result.ConvertAll(item => (string)Convert.ChangeType(item, typeof(string)));
+
+                //Create IPoints from names
+                var points = new List<IPoint>();
+                foreach(var n in names)
+                {
+                    points.Add( new Point(self, n) );
+                }
+
+                return points;
             }
 
             public Task<IVector> Normal(double parameter)

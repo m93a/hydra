@@ -11,8 +11,10 @@ using System.Windows.Forms;
 
 namespace Hydra
 {
+    ///The corpus of Hydra
     public class Program
     {
+        ///The entry point
         [STAThread]
         public static void Main()
         {

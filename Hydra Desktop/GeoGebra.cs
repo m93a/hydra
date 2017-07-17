@@ -3,7 +3,10 @@ using CefSharp.MinimalExample.WinForms;
 using CefSharp.WinForms;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using HydraExtensions;
 
 /**
  * This is the main GeoGebra library-thing.
@@ -19,7 +22,37 @@ namespace Hydra
         BrowserForm browserForm;
         ChromiumWebBrowser browser;
 
-        IFrame mainFrame
+        Dictionary<string, WeakReference<Object>> objects;
+
+
+        ///<summary>This event is called only once when GeoGebra is initialized.</summary>
+        public event EventHandler Loaded;
+
+
+        ///<summary>This event is called every time an object is renamed.</summary>
+        public event EventHandler<RenamedEventArgs> Renamed;
+
+        /// <summary>Important fields are (the new) Name and OldName</summary>
+        public class RenamedEventArgs : EventArgs
+        {
+            public string Name;
+            public string OldName;
+            public IObject Target;
+            public RenamedEventArgs(string A, string B, IObject obj)
+            {
+                Name = A;
+                OldName = B;
+                Target = obj;
+            }
+        }
+
+
+        /**
+         * <summary>Returns the main frame of the CEF browser,
+         * where GeoGebra lives. Don't use this unless you need
+         * to perform some dirty hacks.</summary>
+         **/
+        public IFrame MainFrame
         {
             get {
                 try { return browser.GetMainFrame(); }
@@ -28,8 +61,12 @@ namespace Hydra
         }
 
 
+
         /**
-         * Open GeoGebra in Cef and create bindings 
+         * Open GeoGebra in Cef and create bindings
+         * <summary>This is the main class of the GeoGebra library.
+         * You need to create an instance to use it. When you call
+         * this instructor, a new window appears with GeoGebra inside.</summary>
          **/
         public GeoGebra()
         {
@@ -78,9 +115,11 @@ namespace Hydra
 
             //Open the window
             browserForm.Show();
+
+            //Initialize the list of objects
+            objects = new Dictionary<string, WeakReference<Object>>();
         }
-
-
+        
 
 
 
@@ -96,27 +135,65 @@ namespace Hydra
                 self = instance;
             }
 
+
             //Now you can safely execute code!
-            public void Loaded()
+            public async void Loaded()
             {
                 Console.WriteLine("GeoGebra Fully Loaded!");
-                self.Load(self, new EventArgs());
+
+                //Dispatch event listeners
+                await self.MainFrame.EvaluateScriptAsync(@"
+                    window.renameListener = function(A,B){
+                        hydra.renamed(""""+A,""""+B);
+                    };
+                    
+                    ggbApplet.registerRenameListener(""renameListener"")
+                ");
+
+                //Let everybody know the party begins!
+                self.Loaded(self, new EventArgs());
+            }
+
+
+            //Hook for the rename event
+            public void Renamed(string A, string B)
+            {
+                if (self.Renamed == null) return;
+                if (!self.objects.ContainsKey(A)) return;
+
+                Object obj;
+                if (!self.objects[A].TryGetTarget(out obj)) return;
+
+                var args = new RenamedEventArgs(A, B, obj);
+
+                obj.OnRenamed(self, args);
+                self.Renamed(self, args);
             }
         }
 
 
-
+        
+        
+        
+        
+        
+        
 
 
         /**
-         * GeoGebra.Load event
+         * <summary>Checks whether object with given name exists in GeoGebra</summary>
          **/
-        public event EventHandler Load;
-        
-        
-        
-        
-        
+        public async Task<bool> Exists(string name)
+        {
+            if (name == null) return false;
+
+            var command = "ggbApplet.exists(\"" + name + "\")";
+            var result = this.MainFrame.EvaluateScriptAsync(command);
+            
+            var exists = (bool)(await result).Result;
+            if (!exists) { name = null; }
+            return exists;
+        }
 
 
         /**
@@ -150,13 +227,17 @@ namespace Hydra
             var command = name==null ? "" : name+"=";
             command += string.Format("({0},{1},{2})",x,y,z);
 
-            command = @"
-                ggbApplet.evalCommandGetLabels("""+command+@""");
-            ";
+            command = string.Format(@"
+                ggbApplet.evalCommandGetLabels(""{0}"");
+            ",command);
             
-            name = (string)(await mainFrame.EvaluateScriptAsync(command)).Result;
+            name = (string)(await MainFrame.EvaluateScriptAsync(command)).Result;
+
+            if (objects.ContainsKey(name))
+                await Renamed.Once();
 
             var result = new FreePoint(this, name);
+            objects.Add(name, new WeakReference<Object>(result));
 
             return result;
         }

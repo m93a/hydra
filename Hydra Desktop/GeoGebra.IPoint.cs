@@ -31,11 +31,11 @@ namespace Hydra
             //To get the X coord, you call getCoord("X")
             async Task<double> getCoord(string c)
             {
-                if (_name == null)
+                if (Name == null)
                     throw new ObjectDisposedException("This object no longer exists.");
 
-                var command = string.Format(@"ggbApplet.get{0}coord(""{1}"")", c, _name);
-                var result = self.mainFrame.EvaluateScriptAsync(command);
+                var command = string.Format(@"ggbApplet.get{0}coord(""{1}"")", c, Name);
+                var result = self.MainFrame.EvaluateScriptAsync(command);
 
                 //Convert from any boxed type to double
                 return (double)Convert.ChangeType(
@@ -82,7 +82,7 @@ namespace Hydra
                 {
                     return Task.Run(async () =>
                     {
-                        if (_name == null)
+                        if (Name == null)
                             throw new ObjectDisposedException("This object no longer exists.");
 
                         var command = string.Format(@"
@@ -91,9 +91,9 @@ namespace Hydra
                             ggbApplet.getYcoord(""{0}""),
                             ggbApplet.getZcoord(""{0}""),
                         ]
-                        ", _name);
+                        ", Name);
 
-                        var task = self.mainFrame.EvaluateScriptAsync(command);
+                        var task = self.MainFrame.EvaluateScriptAsync(command);
                         var result = (List<object>)(await task).Result;
 
                         //Convert from any boxed type to double
@@ -106,18 +106,18 @@ namespace Hydra
             
             public async Task<IFreePoint> CopyFreeObject()
             {
-                if (_name == null)
+                if (Name == null)
                     throw new ObjectDisposedException("This object no longer exists.");
 
                 var command = string.Format(@"
                     CopyFreeObject[{0}]
-                ", _name);
+                ", Name);
 
                 command = string.Format(@"
                     ggbApplet.evalCommandGetLabels(""{0}"");
                 ",command);
 
-                var task = self.mainFrame.EvaluateScriptAsync(command);
+                var task = self.MainFrame.EvaluateScriptAsync(command);
                 var name = (string)(await task).Result;
                 
                 return new FreePoint(self, name);
@@ -142,14 +142,14 @@ namespace Hydra
 
             public async Task SetCoords(double x, double y, double z = 0)
             {
-                if (_name == null)
+                if (Name == null)
                     throw new ObjectDisposedException("This object no longer exists.");
 
                 var command = string.Format(@"
                     ggbApplet.setCoords(""{0}"",{1},{2},{3}),
-                ", _name, x, y, z);
+                ", Name, x, y, z);
 
-                await self.mainFrame.EvaluateScriptAsync(command);
+                await self.MainFrame.EvaluateScriptAsync(command);
             }
         }
     }

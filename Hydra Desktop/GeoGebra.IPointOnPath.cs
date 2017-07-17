@@ -24,12 +24,12 @@ namespace Hydra
                 {
                     return Task.Run(async () =>
                     {
-                        if (_name == null)
+                        if (Name == null)
                             throw new ObjectDisposedException("This object no longer exists.");
 
                         var command = string.Format(@"
                             PathParameter[{0}]
-                        ", _name);
+                        ", Name);
 
                         command = string.Format(@"
                             (function(){
@@ -40,7 +40,7 @@ namespace Hydra
                             })();
                         ", command);
 
-                        var result = self.mainFrame.EvaluateScriptAsync(command);
+                        var result = self.MainFrame.EvaluateScriptAsync(command);
 
                         //Convert from any boxed type to double
                         return (double)Convert.ChangeType(

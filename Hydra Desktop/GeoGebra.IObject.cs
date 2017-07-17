@@ -18,27 +18,30 @@ namespace Hydra
             Task<bool> Exists { get; }
             Task Rename(string name);
             Task Delete();
+
+            event EventHandler<RenamedEventArgs> Renamed;
         }
 
         class Object : IObject
         {
             protected GeoGebra self;
-            public string _name;
-            public string Name
+            public string Name;
+            string IObject.Name
             {
-                get { return _name; }
+                get { return Name; }
             }
 
             public Object(GeoGebra instance, string name)
             {
                 self = instance;
-                _name = name;
+                Name = name;
             }
 
             ~Object()
             {
                 // Will this hurt, mommy?
                 // var t = Delete();
+
                 // tl;dr Yes it will.
                 // First we need to make sure not to GC the objects
                 // that are needed by other dependent ones.
@@ -49,15 +52,8 @@ namespace Hydra
             {
                 get
                 {
-                    if (_name == null)
-                        return Task.Run(() => false);
-
-                    var command = "ggbApplet.exists(\"" + _name + "\")";
-                    var result = self.mainFrame.EvaluateScriptAsync(command);
                     return Task.Run<bool>(async () => {
-                        var exists = (bool)(await result).Result;
-                        if (!exists) { _name = null; }
-                        return exists;
+                        return await self.Exists(Name);
                     });
                 }
             }
@@ -65,29 +61,39 @@ namespace Hydra
 
             public async Task Rename(string name)
             {
-                if (_name == null)
+                if (Name == null)
                     throw new ObjectDisposedException("This object no longer exists.");
 
-                var command = string.Format(@"ggbApplet.renameObject(""{0}"",""{1}"")", _name, name);
-                var result = self.mainFrame.EvaluateScriptAsync(command);
+                var command = string.Format(@"ggbApplet.renameObject(""{0}"",""{1}"")", Name, name);
+                var result = self.MainFrame.EvaluateScriptAsync(command);
                 if (!(bool)(await result).Result)
-                    throw new Exception("There was an error while renaming " + _name + " to " + name + ".");
+                    throw new Exception("There was an error while renaming " + Name + " to " + name + ".");
 
-                _name = name;
+                Name = name;
             }
 
 
             public async Task Delete()
             {
-                if (_name == null) { return; };
+                if (Name == null) { return; };
 
-                var command = string.Format(@"ggbApplet.deleteObject(""{0}"")", _name);
-                await self.mainFrame.EvaluateScriptAsync(command);
+                var command = string.Format(@"ggbApplet.deleteObject(""{0}"")", Name);
+                await self.MainFrame.EvaluateScriptAsync(command);
 
                 if (await Exists)
                     throw new Exception("Could not delete the object.");
 
-                _name = null;
+                Name = null;
+            }
+
+
+            public event EventHandler<RenamedEventArgs> Renamed;
+            public void OnRenamed(object sender, RenamedEventArgs args)
+            {
+                Name = args.Name;
+
+                if (Renamed == null) return;
+                Renamed(sender, args);
             }
         }
     }

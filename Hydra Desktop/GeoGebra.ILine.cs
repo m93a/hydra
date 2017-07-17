@@ -27,14 +27,44 @@ namespace Hydra
                 return CreatePerpendicular((IPoint)there);
             }
 
-            public Task<ILine> CreatePerpendicular(IPoint through)
+            public async Task<ILine> CreatePerpendicular(IPoint through)
             {
-                throw new NotImplementedException();
+                if (Name == null)
+                    throw new ObjectDisposedException("This object no longer exists.");
+
+                var command = string.Format(@"
+                    PerpendicularLine[{0},{1}]
+                ", through.Name, Name);
+
+                command = string.Format(@"
+                    ggbApplet.evalCommandGetLabels(""{0}"");
+                ", command);
+
+                var task = self.MainFrame.EvaluateScriptAsync(command);
+                var name = (string)(await task).Result;
+
+                return new Line(self, name);
             }
 
-            public Task<ILine> CreateParallel(IPoint through)
+
+
+            public async Task<ILine> CreateParallel(IPoint through)
             {
-                throw new NotImplementedException();
+                if (Name == null)
+                    throw new ObjectDisposedException("This object no longer exists.");
+
+                var command = string.Format(@"
+                    Line[{0},{1}]
+                ", through.Name, Name);
+
+                command = string.Format(@"
+                    ggbApplet.evalCommandGetLabels(""{0}"");
+                ", command);
+
+                var task = self.MainFrame.EvaluateScriptAsync(command);
+                var name = (string)(await task).Result;
+
+                return new Line(self, name);
             }
         }
     }

@@ -6,24 +6,31 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 
 
-using Assert = NUnit.Framework.Assert;
-using System.IO;
 using System.Collections.Generic;
-//using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using CefSharp;
+
+//*
+using Assert = NUnit.Framework.Assert;
+using TimeoutAttribute = NUnit.Framework.TimeoutAttribute;
+/*/
+using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using TimeoutAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute;
+//*/
 
 
 /**
- * To execute the tests:
- * Test Explorer > Run All
- * Win+R cmd Enter
- * cd "Hydra Desktop Tests/bin/[x86|x64]/Debug"
- * nunit3-console.exe "Hydra Desktop Tests.dll" --domain=None --inprocess
+ * To execute the tests in VS, just build the Tests Project,
+ * otherwise:
+ * 
+ * Build the project
+ * Open the output folder
+ * Execute RunTests.bat
  **/
 
 
 namespace HydraTests
 {
-    //[TestClass, /*TestFixture*/]
+    [TestClass, TestFixture]
     public class GeoGebraTest
     {
 
@@ -69,8 +76,8 @@ namespace HydraTests
                 //Start GeoGebra
                 instance = new GeoGebra();
 
-                //When it's loaded, tell them know!
-                instance.Load += delegate {
+                //When it's loaded, let us know!
+                instance.Loaded += delegate {
                     loaded.SetResult(true);
                 };
             }
@@ -103,7 +110,7 @@ namespace HydraTests
          */
 
 
-        [TestMethod, Test]
+        [TestMethod, Test, Timeout(5000)]
         public async Task PointBasic()
         {
             //Basic functionality
@@ -124,10 +131,10 @@ namespace HydraTests
             Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
         }
 
-        [TestMethod, Test]
+        [TestMethod, Test, Timeout(5000)]
         public async Task PointRename()
         {
-            //Renaming
+            //Basic renaming
 
             var pt = await instance.CreatePoint(1, 2, 3);
 
@@ -139,18 +146,64 @@ namespace HydraTests
             Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
         }
 
-        [TestMethod, Test]
+        [TestMethod, Test, Timeout(5000)]
+        public async Task PointNameConflict()
+        {
+            //Resolving name conflicts
+
+            var name1 = "ABC";
+            var pt1 = await instance.CreatePoint(1, 2, 3, name1);
+
+            Assert.AreEqual(pt1.Name, name1);
+
+            var pt2 = await instance.CreatePoint(2, 4, 6, name1);
+
+            Assert.AreEqual(pt2.Name, name1);
+            Assert.AreNotEqual(pt1.Name, name1);
+            
+            Assert.IsTrue(await pt1.Exists);
+            Assert.IsTrue(await pt2.Exists);
+
+            Assert.AreEqual(await pt1.Coords, new List<double>() { 1, 2, 3 });
+            Assert.AreEqual(await pt2.Coords, new List<double>() { 2, 4, 6 });
+        }
+
+        [TestMethod, Test, Timeout(5000)]
+        public async Task PointRenameConflict()
+        {
+            //Resolving rename conflicts
+
+            var name1 = "ABC";
+            var pt1 = await instance.CreatePoint(1, 2, 3, name1);
+            var pt2 = await instance.CreatePoint(2, 4, 6);
+
+            Assert.AreEqual(pt1.Name, name1);
+
+            await pt2.Rename(name1);
+
+            Assert.AreEqual(pt2.Name, name1);
+            Assert.AreNotEqual(pt1.Name, name1);
+
+            Assert.IsTrue(await pt1.Exists);
+            Assert.IsTrue(await pt2.Exists);
+
+            Assert.AreEqual(await pt1.Coords, new List<double>() { 1, 2, 3 });
+            Assert.AreEqual(await pt2.Coords, new List<double>() { 2, 4, 6 });
+        }
+
+        [TestMethod, Test, Timeout(5000)]
         public async Task PointDelete()
         {
             //Deleting
 
             var pt = await instance.CreatePoint(1, 2, 3);
+            var name = pt.Name;
 
             await pt.Delete();
 
             Assert.IsNull(pt.Name);
-            Assert.IsFalse(await pt.Exists);
-
+            Assert.IsFalse(await pt.Exists, "IObject API says obj is deleted");
+            Assert.IsFalse(await instance.Exists(name), "Object is really deleted from GeoGebra");
         }
     }
 
@@ -159,6 +212,7 @@ namespace HydraTests
      * * *
      * IPoint.CopyFreeObject
      * IFreePoint.SetCoords
+     * test undefined object
      * make sure to check (x,y), (x,y,z) and (list) everywhere
      * make sure nothing can be called on a deleted object
      * make sure objects get garbage-collected

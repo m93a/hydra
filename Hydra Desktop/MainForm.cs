@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpenTK;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,15 +16,17 @@ namespace Hydra
 
         GeoGebra ggb;
 
+        ///The main window with UI and stuff
         public MainForm()
         {
+            Toolkit.Init();
             InitializeComponent();
         }
 
         void MainForm_Load(object sender, EventArgs e)
         {
             ggb = new GeoGebra();
-            ggb.Load += Ggb_Load;
+            ggb.Loaded += Ggb_Load;
         }
 
         private async void Ggb_Load(object sender, EventArgs e)
