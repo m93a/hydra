@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HydraExtensions;
 
 namespace Hydra
 {
@@ -61,6 +62,8 @@ namespace Hydra
 
             public async Task Rename(string name)
             {
+                var locktask = this.Once("Renamed");
+
                 if (Name == null)
                     throw new ObjectDisposedException("This object no longer exists.");
 
@@ -69,7 +72,7 @@ namespace Hydra
                 if (!(bool)(await result).Result)
                     throw new Exception("There was an error while renaming " + Name + " to " + name + ".");
 
-                Name = name;
+                await locktask;
             }
 
 
@@ -90,6 +93,9 @@ namespace Hydra
             public event EventHandler<RenamedEventArgs> Renamed;
             public void OnRenamed(object sender, RenamedEventArgs args)
             {
+                self.objects.Remove(Name);
+                self.objects.Add(args.Name, new WeakReference<Object>(this));
+
                 Name = args.Name;
 
                 if (Renamed == null) return;

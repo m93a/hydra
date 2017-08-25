@@ -31,7 +31,10 @@ namespace Hydra
 
         private async void Ggb_Load(object sender, EventArgs e)
         {
-            await ggb.CreatePoint(1, 2, 3);
+            var pt = await ggb.CreatePoint(1, 2, 3);
+            await pt.Rename("B");
+
+            var ps = await ggb.CreatePoint(3, 2, 1, "B");
         }
     }
 }

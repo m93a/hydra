@@ -158,7 +158,6 @@ namespace Hydra
             //Hook for the rename event
             public void Renamed(string A, string B)
             {
-                if (self.Renamed == null) return;
                 if (!self.objects.ContainsKey(A)) return;
 
                 Object obj;
@@ -167,6 +166,8 @@ namespace Hydra
                 var args = new RenamedEventArgs(A, B, obj);
 
                 obj.OnRenamed(self, args);
+
+                if (self.Renamed == null) return;
                 self.Renamed(self, args);
             }
         }
@@ -198,8 +199,9 @@ namespace Hydra
 
         /**
          * <summary>Create new free point with the given coordinates.</summary>
+         * <see cref="CreatePoint(double, double, double)"/>
          **/
-        
+
         public Task<IFreePoint> CreatePoint(List<double> coords, string name = null)
         {
             var c = coords;
@@ -207,7 +209,7 @@ namespace Hydra
             switch (c.Count)
             {
                 case 2:
-                    return CreatePoint(c[0], c[1], 0, name);
+                    return CreatePoint(c[0], c[1], name);
 
                 case 3:
                     return CreatePoint(c[0], c[1], c[2], name);
@@ -222,24 +224,43 @@ namespace Hydra
          * <summary>Create new free point with the given coordinates.</summary>
          **/
         
-        public async Task<IFreePoint> CreatePoint(double x, double y, double z=0, string name=null)
+        public async Task<IFreePoint> CreatePoint(double x, double y, double z=0)
         {
-            var command = name==null ? "" : name+"=";
-            command += string.Format("({0},{1},{2})",x,y,z);
+            var command = string.Format("({0},{1},{2})",x,y,z);
 
             command = string.Format(@"
                 ggbApplet.evalCommandGetLabels(""{0}"");
             ",command);
             
-            name = (string)(await MainFrame.EvaluateScriptAsync(command)).Result;
-
-            if (objects.ContainsKey(name))
-                await this.Once("Renamed");
+            var name = (string)(await MainFrame.EvaluateScriptAsync(command)).Result;
 
             var result = new FreePoint(this, name);
             objects.Add(name, new WeakReference<Object>(result));
 
             return result;
+        }
+
+        /**
+         * <summary>Create new free point with the given coordinates.</summary>
+         * <see cref="CreatePoint(double, double, double)"/>
+         **/
+        public async Task<IFreePoint> CreatePoint(double x, double y, double z, string name)
+        {
+            // this is because of name conflicts
+            // otherwise, the create function would just override
+            // the existing point/line/whatever with that name
+            var pt = await CreatePoint(x, y, z);
+            await pt.Rename(name);
+            return pt;
+        }
+
+        /**
+         * <summary>Create new free point with the given coordinates.</summary>
+         * <see cref="CreatePoint(double, double, double)"/>
+         **/
+        public Task<IFreePoint> CreatePoint(double x, double y, string name)
+        {
+            return CreatePoint(x, y, 0, name);
         }
     }
 }

@@ -67,7 +67,8 @@ namespace HydraTests
         /*
          * The tests
          */
-        
+
+        // if this fails, try again possibly w/ longer time
         [TestMethod, Test, Timeout(1000)]
         public async Task TaskTimeout()
         {
@@ -103,6 +104,7 @@ namespace HydraTests
         }
 
 
+        // if this fails, try again possibly w/ longer time
         [TestMethod, Test, Timeout(750)]
         public async Task EventOnce()
         {
