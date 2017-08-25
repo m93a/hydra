@@ -33,7 +33,7 @@ namespace HydraTests
          * Fields
          */
 
-        event EventHandler<int> MyEvent;
+        public event EventHandler<int> MyEvent;
         
         /*
          * General methods (init, terminate, clean)
@@ -68,7 +68,7 @@ namespace HydraTests
          * The tests
          */
         
-        [TestMethod, Test, Timeout(1500)]
+        [TestMethod, Test, Timeout(1000)]
         public async Task TaskTimeout()
         {
             // Duration 250ms, timeout 500ms ⇒ success
@@ -103,10 +103,10 @@ namespace HydraTests
         }
 
 
-        [TestMethod, Test, Timeout(500)]
+        [TestMethod, Test, Timeout(750)]
         public async Task EventOnce()
         {
-            var task = MyEvent.Once();
+            var task = this.Once("MyEvent");
             var done = Task.Run(async ()=> {
                 await Task.Delay(250);
                 MyEvent(this, 42);

@@ -110,7 +110,7 @@ namespace HydraTests
          */
 
 
-        [TestMethod, Test, Timeout(5000)]
+        [TestMethod, Test, Timeout(2000)]
         public async Task PointBasic()
         {
             //Basic functionality
@@ -131,7 +131,7 @@ namespace HydraTests
             Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
         }
 
-        [TestMethod, Test, Timeout(5000)]
+        [TestMethod, Test, Timeout(2000)]
         public async Task PointRename()
         {
             //Basic renaming
@@ -146,7 +146,7 @@ namespace HydraTests
             Assert.AreEqual(await pt.Coords, new List<double>() { 1, 2, 3 });
         }
 
-        [TestMethod, Test, Timeout(5000)]
+        [TestMethod, Test, Timeout(2000)]
         public async Task PointNameConflict()
         {
             //Resolving name conflicts
@@ -168,7 +168,7 @@ namespace HydraTests
             Assert.AreEqual(await pt2.Coords, new List<double>() { 2, 4, 6 });
         }
 
-        [TestMethod, Test, Timeout(5000)]
+        [TestMethod, Test, Timeout(2000)]
         public async Task PointRenameConflict()
         {
             //Resolving rename conflicts
@@ -191,7 +191,7 @@ namespace HydraTests
             Assert.AreEqual(await pt2.Coords, new List<double>() { 2, 4, 6 });
         }
 
-        [TestMethod, Test, Timeout(5000)]
+        [TestMethod, Test, Timeout(2000)]
         public async Task PointDelete()
         {
             //Deleting

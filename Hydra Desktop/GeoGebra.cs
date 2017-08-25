@@ -234,7 +234,7 @@ namespace Hydra
             name = (string)(await MainFrame.EvaluateScriptAsync(command)).Result;
 
             if (objects.ContainsKey(name))
-                await Renamed.Once();
+                await this.Once("Renamed");
 
             var result = new FreePoint(this, name);
             objects.Add(name, new WeakReference<Object>(result));

@@ -33,6 +33,9 @@ namespace HydraExtensions
          * </example>
          * 
          * 
+         * <param name="task">
+         *     The task you want to delay.
+         * </param>
          * <param name="delay">
          *     Timeout as a TimeSpan or as an integer in milliseconds.
          * </param>
